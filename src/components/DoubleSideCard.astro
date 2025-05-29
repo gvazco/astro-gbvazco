@@ -1,0 +1,25 @@
+---
+import { joinClasses } from "../utils/joinClasses";
+
+type Props = {
+  classes: string;
+  styles: string;
+  cardFront: string;
+  cardBack: string;
+};
+
+const { classes, styles, cardFront, cardBack } = Astro.props;
+---
+
+<div
+  data-aos="fade-in"
+  data-aos-delay="100"
+  data-aos-duration="1000"
+  class={joinClasses(classes, "double-side-card")}
+  style={styles}
+>
+  <div class="ds-card-inner">
+    <div class="card-front"><h3>{cardFront}</h3></div>
+    <div class="card-back text-sm"><p>{cardBack}</p></div>
+  </div>
+</div>

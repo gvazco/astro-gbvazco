@@ -1,0 +1,39 @@
+---
+import BlockRenderer from "../components/BlockRenderer.astro";
+import CommonHead from "../components/CommonHead.astro";
+import { MenuToggler } from "../components/MenuToggler";
+export const prerender = false;
+
+const { ssr } = Astro.params;
+
+const response = await fetch(
+  `${Astro.url.origin}/api/page-data${ssr ? `/${ssr}` : ""}.json`
+);
+const { data } = await response.json();
+if (!data) {
+  return Astro.redirect("/404");
+}
+const { seo, blocks, databaseId } = data;
+---
+
+<html lang="en">
+  <CommonHead title={seo.title || ""} description={seo.metaDesc || ""} />
+  <body>
+    <div id="progressbar"></div>
+    <div id="scrollPath"></div>
+    <MenuToggler client:only />
+    <BlockRenderer blocks={blocks} postId={databaseId} />
+    <script>
+      let progress = document.getElementById("progressbar");
+
+      let totalHeight = document.body.scrollHeight - window.innerHeight;
+
+      window.onscroll = function () {
+        let progressHeight = (window.pageYOffset / totalHeight) * 100;
+        if (progress) {
+          progress.style.height = progressHeight + "%";
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,440 @@
+---
+import ContactForm7 from "./ContactForm7.tsx";
+import { PostGallery } from "./PostGallery.tsx";
+import BlockRendererInner from "./BlockRenderer.astro";
+import Navigation from "./Navigation.astro";
+import Button from "./Button.astro";
+import Heading from "./Heading.astro";
+import Cover from "./Cover.astro";
+import TickItem from "./TickItem.astro";
+import InfoIcon from "./InfoIcon.astro";
+import ShieldIcon from "./ShieldIcon.astro";
+import WhatsappIcon from "./WhatsappIcon.astro";
+import WhatsappButton from "./WhatsappButton.astro";
+import PhoneButton from "./PhoneButton.astro";
+import SocialLink from "./SocialLink.astro";
+import PostSearch from "./PostSearch.astro";
+import ContentSearch from "./ContentSearch.astro";
+import CommunitySearch from "./CommunitySearch.astro";
+import CategorySearch from "./CategorySearch.astro";
+import CategoryContent from "./CategoryContent.astro";
+import NavigationSubmenu from "./NavigationSubmenu.astro";
+import NavigationLink from "./NavigationLink.astro";
+import CatchwordBanner from "./CatchwordBanner.astro";
+import DoubleSideCard from "./DoubleSideCard.astro";
+import { getBlockStyling } from "@wp-block-tools/styles";
+import type { Block } from "@wp-block-tools/styles";
+import { Image } from "astro:assets";
+import { joinClasses } from "../utils/joinClasses";
+
+type Props = {
+  postId: number;
+  blocks: Block[];
+};
+const { blocks, postId } = Astro.props;
+
+const replacements: { [key: string]: string } = {
+  "Ã¡": "á",
+  "Ã©": "é",
+  Ã: "í",
+  "Ã³": "ó",
+  Ãº: "ú",
+  "Ã±": "ñ",
+  "Ã¼": "ü",
+  // Añade más si encuentras otros caracteres
+};
+
+function fixAccents(text: string): string {
+  return text.replace(
+    /Ã¡|Ã©|Ã|Ã³|Ãº|Ã±|Ã¼/g,
+    (match) => replacements[match] || match
+  );
+}
+---
+
+{
+  blocks.map((block) => {
+    const { styles, classes } = getBlockStyling(block);
+    // console.log(block.name);
+    switch (block.name) {
+      case "contact-form-7/contact-form-selector":
+        return (
+          <ContactForm7
+            client:only="react"
+            formId={block.attributes?.id}
+            formMarkup={block.attributes?.formMarkup}
+          />
+        );
+      case "astroestates/catchword-banner":
+        return (
+          <CatchwordBanner
+            classes={classes}
+            styles={styles}
+            catchword={block.attributes?.data?.catchword}
+            catchwordSlogan={block.attributes?.data?.catchword_slogan}
+          />
+        );
+      case "astroestates/double-side-card":
+        return (
+          <DoubleSideCard
+            classes={classes}
+            styles={styles}
+            cardFront={block.attributes?.data?.card_front}
+            cardBack={block.attributes?.data?.card_back}
+          />
+        );
+      case "astroestates/post-search":
+        return <PostSearch />;
+      case "astroestates/category-search":
+        return <CategorySearch />;
+      case "astroestates/content-search":
+        return <ContentSearch />;
+      case "astroestates/community-search":
+        return <CommunitySearch />;
+      case "astroestates/category-content":
+        return <CategoryContent />;
+      case "astroestates/post-gallery":
+        console.log(block);
+        return (
+          <PostGallery
+            client:only="react"
+            postgallery={block.attributes?.postgallery}
+            postId={postId}
+          />
+        );
+      case "astroestates/phone-button":
+        return <PhoneButton />;
+      case "astroestates/tick-item":
+        return (
+          <TickItem>
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </TickItem>
+        );
+      case "astroestates/info-icon":
+        return (
+          <InfoIcon>
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </InfoIcon>
+        );
+      case "astroestates/shield-icon":
+        return (
+          <ShieldIcon>
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </ShieldIcon>
+        );
+      case "astroestates/whatsapp-icon":
+        return (
+          <WhatsappIcon>
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </WhatsappIcon>
+        );
+      case "astroestates/whatsapp-button":
+        return (
+          <WhatsappButton
+            slug={block.attributes?.slug}
+            whatsapp={block.attributes?.whatsapp}
+            postId={postId}
+          />
+        );
+      case "core/audio":
+        return (
+          <audio
+            controls
+            class={joinClasses(classes, "audioStyle")}
+            style={styles}
+          >
+            <source src={block.attributes?.src} type="audio/mpeg" />
+            Your browser does not support the audio element.
+          </audio>
+        );
+      case "core/gallery":
+        return (
+          <div style={styles} class={joinClasses(classes, "galleryStyle")}>
+            {(block.innerBlocks || []).map((innerBlock) => (
+              <div>
+                <BlockRendererInner blocks={[innerBlock]} postId={postId} />
+              </div>
+            ))}
+          </div>
+        );
+      case "core/image":
+        return (
+          <a href={block.attributes?.href} target="_blank">
+            <Image
+              data-aos="fade-in"
+              data-aos-delay="200"
+              data-aos-duration="1000"
+              src={block.attributes?.url}
+              height={block.attributes?.height}
+              width={block.attributes?.width}
+              class={classes}
+              style={styles}
+              alt="core image"
+            />
+          </a>
+        );
+      case "core/button":
+        let label = block.attributes?.content || "";
+        label = fixAccents(label);
+        return (
+          <Button
+            classes={classes}
+            styles={styles}
+            url={block.attributes?.url}
+            content={label}
+          />
+        );
+      case "core/post-title":
+      case "core/heading":
+        return (
+          <Heading
+            transitionName={
+              block.name === "core/post-title" ? `post-title-${postId}` : ""
+            }
+            level={block.attributes?.level || 2}
+            classes={joinClasses(classes, block.attributes?.className || "")}
+            styles={styles}
+            content={block.attributes?.content || ""}
+          />
+        );
+      case "core/cover":
+        return (
+          <Cover
+            classes={joinClasses(classes, block.attributes?.className || "")}
+            styles={styles}
+            url={block.attributes?.url}
+            height={block.attributes?.height}
+            width={block.attributes?.width}
+            dimRatio={block.attributes?.dimRatio}
+            overlayColor={block.attributes?.overlayColor}
+            customOverlayColor={block.attributes?.customOverlayColor}
+            minHeight={block.attributes?.minHeight}
+            minHeightUnit={block.attributes?.minHeightUnit}
+          >
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </Cover>
+        );
+      case "core/navigation-submenu":
+        return (
+          <NavigationSubmenu
+            classes={classes}
+            styles={styles}
+            label={block.attributes?.label || ""}
+            url={block.attributes?.url || ""}
+          >
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </NavigationSubmenu>
+        );
+      case "core/navigation-link":
+        return (
+          <NavigationLink
+            classes={classes}
+            styles={styles}
+            label={block.attributes?.label || ""}
+            url={block.attributes?.url || ""}
+          />
+        );
+      case "core/navigation":
+        return (
+          <Navigation classes={classes} styles={styles}>
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </Navigation>
+        );
+      case "core/paragraph":
+        return (
+          <p
+            data-aos="fade-in"
+            data-aos-delay="200"
+            data-aos-duration="1000"
+            class={classes}
+            style={styles}
+            set:html={block.attributes?.content}
+          />
+        );
+      case "core/columns":
+      case "core/column":
+      case "core/post-content":
+      case "core/buttons":
+      case "core/social-links":
+        return (
+          <div
+            class={joinClasses(classes, block.attributes?.className || "")}
+            style={styles}
+          >
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </div>
+        );
+      case "core/group":
+        return (
+          <div
+            class={joinClasses(classes, block.attributes?.className || "")}
+            style={styles}
+            id={block.attributes?.className}
+          >
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </div>
+        );
+      case "core/separator":
+        return (
+          <div class="flex mb-5 items-center justify-center w-full">
+            <hr
+              class="w-32 h-1 border-0 rounded-sm"
+              style="background:rgba(255, 255, 255, 0.75);"
+            />
+            <div class="absolute px-4 -translate-x-1/2 left-1/2 ">
+              <svg
+                width="18px"
+                height="18px"
+                viewBox="0 0 512 512"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+              >
+                <title>circle-dot</title>
+                <g
+                  id="Page-1"
+                  stroke="none"
+                  stroke-width="1"
+                  fill="none"
+                  fill-rule="evenodd"
+                >
+                  <g
+                    id="drop"
+                    fill="#FFFFFF"
+                    transform="translate(42.666667, 42.666667)"
+                  >
+                    <path
+                      d="M213.333333,3.55271368e-14 C331.15408,3.55271368e-14 426.666667,95.5125867 426.666667,213.333333 C426.666667,331.15408 331.15408,426.666667 213.333333,426.666667 C95.5125867,426.666667 3.55271368e-14,331.15408 3.55271368e-14,213.333333 C3.55271368e-14,95.5125867 95.5125867,3.55271368e-14 213.333333,3.55271368e-14 Z M213.333333,42.6666667 C119.076736,42.6666667 42.6666667,119.076736 42.6666667,213.333333 C42.6666667,307.589931 119.076736,384 213.333333,384 C307.589931,384 384,307.589931 384,213.333333 C384,119.076736 307.589931,42.6666667 213.333333,42.6666667 Z M213.333333,106.666667 C272.243707,106.666667 320,154.42296 320,213.333333 C320,272.243707 272.243707,320 213.333333,320 C154.42296,320 106.666667,272.243707 106.666667,213.333333 C106.666667,154.42296 154.42296,106.666667 213.333333,106.666667 Z"
+                      id="Combined-Shape"
+                    />
+                  </g>
+                </g>
+              </svg>
+            </div>
+          </div>
+        );
+      case "core/list":
+        return (
+          <ul>
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </ul>
+        );
+      case "core/list-item":
+        return (
+          <li
+            class={joinClasses(classes, "listStyle")}
+            style={styles}
+            set:html={block.attributes?.content}
+          />
+        );
+      case "core/social-link":
+        return (
+          <SocialLink
+            url={block.attributes?.url}
+            service={block.attributes?.service}
+            classes={classes}
+            styles={styles}
+          />
+        );
+      case "core/site-logo":
+        // console.log(block.attributes);
+        return (
+          <div class={classes} style={styles}>
+            <a href="/">
+              <Image
+                height={block.attributes?.width || "75"}
+                width={block.attributes?.width || "250"}
+                src={block.attributes?.url || ""}
+                alt="Site logo"
+                widths={[50, 75, 100, 250]}
+              />
+            </a>
+          </div>
+        );
+      case "core/template-part":
+        return (
+          <BlockRendererInner
+            blocks={block.innerBlocks || []}
+            postId={postId}
+          />
+        );
+      case "core/embed":
+        // console.log("EMBED", block.attributes.url);
+        return (
+          <iframe
+            width="100%"
+            height="600"
+            class={classes}
+            style={styles}
+            src={block.attributes?.url}
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          />
+        );
+      case "cb/carousel":
+        return (
+          <div class="slider-wrapper">
+            <div class="slider-container">
+              <BlockRendererInner
+                blocks={block.innerBlocks || []}
+                postId={postId}
+              />
+            </div>
+          </div>
+        );
+      case "cb/slide":
+        return (
+          <div class="slider-item">
+            <BlockRendererInner
+              blocks={block.innerBlocks || []}
+              postId={postId}
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  })
+}
+
+<script type="module" src="/js/slider.js"></script>
+
+<script>
+  import AOS from "aos";
+  import "aos/dist/aos.css";
+  AOS.init({
+    startEvent: "DOMContentLoaded",
+  });
+</script>

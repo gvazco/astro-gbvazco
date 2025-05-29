@@ -1,0 +1,110 @@
+---
+import BlockRenderer from "../components/BlockRenderer.astro";
+import type { Block } from "@wp-block-tools/styles";
+import CommonHead from "../components/CommonHead.astro";
+import { MenuToggler } from "../components/MenuToggler";
+
+export async function getStaticPaths() {
+  const response = await fetch(`${import.meta.env.WPGRAPHQL_URL}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=UTF-8",
+    },
+    body: JSON.stringify({
+      query: `
+			query AllPages {
+				pages(first: 1000){
+					nodes {
+						uri
+            blocks(attributes:false)
+					}
+				}
+        posts(first: 1000) {
+          nodes {
+            uri
+            blocks(attributes:false)
+          }
+        }
+			}
+			`,
+    }),
+  });
+  const { data } = await response.json();
+  return [...data.pages.nodes, ...data.posts.nodes]
+    .filter((page: any) => {
+      let found = false;
+      const hasModelSearch = (blocks: Block[]) => {
+        for (let block of blocks) {
+          if (block.name === "astroestates/content-search") {
+            found = true;
+            break;
+          } else if (block.name === "astroestates/community-search") {
+            found = true;
+            break;
+          }
+          if (block.innerBlocks) {
+            hasModelSearch(block.innerBlocks);
+          }
+        }
+      };
+      hasModelSearch(page.blocks);
+      return !found;
+    })
+    .map((page: any) => ({
+      params: { slug: page.uri === "/" ? undefined : page.uri },
+    }));
+}
+
+const response = await fetch(`${import.meta.env.WPGRAPHQL_URL}`, {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+  },
+  body: JSON.stringify({
+    query: `
+		query PageQuery($uri: String!) {
+			nodeByUri(uri: $uri) {
+				... on ContentNode {
+					databaseId
+					blocks
+					seo {
+						metaDesc
+						title
+					}
+				}
+			}
+		}
+		`,
+    variables: {
+      uri: (Astro.params as any).slug || "/",
+    },
+  }),
+});
+const { data } = await response.json();
+//const { blocks, seo } = Astro.props;
+const blocks = (data.nodeByUri?.blocks || []) as Block[];
+const seo = data.nodeByUri?.seo;
+const postId = data.nodeByUri?.databaseId;
+---
+
+<html lang="en">
+  <CommonHead title={seo.title || ""} description={seo.metaDesc || ""} />
+  <body>
+    <div id="progressbar"></div>
+    <div id="scrollPath"></div>
+    <MenuToggler client:only />
+    <BlockRenderer blocks={blocks} postId={postId} />
+    <script>
+      let progress = document.getElementById("progressbar");
+
+      let totalHeight = document.body.scrollHeight - window.innerHeight;
+
+      window.onscroll = function () {
+        let progressHeight = (window.pageYOffset / totalHeight) * 100;
+        if (progress) {
+          progress.style.height = progressHeight + "%";
+        }
+      };
+    </script>
+  </body>
+</html>
