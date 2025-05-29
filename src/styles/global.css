@@ -245,6 +245,8 @@ a.nav-link {
 }
 
 #down {
+  position: absolute;
+  left: 45%;
   width: 4rem;
   height: 4rem;
   background-color: #eee;
@@ -578,7 +580,7 @@ a.nav-link {
 }
 
 .card-back {
-  color: black;
+  color: whitesmoke;
   transform: rotateY(180deg);
   padding: 0.5rem;
   border-radius: 25px;
@@ -589,6 +591,7 @@ a.nav-link {
   overflow: hidden;
   text-align: center;
   font-weight: 600;
+  font-size: 20px;
 }
 
 .rancho-regular {
@@ -724,11 +727,10 @@ a.nav-link {
     width: 2.5rem;
     height: 2.5rem;
     bottom: -5rem;
-    left: 45%;
   }
 
   .nav-link {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
 
   .slider-container .slider-item {
